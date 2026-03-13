@@ -8,10 +8,10 @@ import useReminderStore, {
 } from '../store/reminderStore';
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
-const alertConfig = {
-  [ALERT_TYPES.AGGRESSIVE]: { icon: 'alarm', color: colors.danger },
-  [ALERT_TYPES.STANDARD]: { icon: 'notifications', color: colors.primary },
-  [ALERT_TYPES.VIBRATION]: { icon: 'phone-portrait', color: colors.warning },
+const alertIcons = {
+  [ALERT_TYPES.AGGRESSIVE]: 'alarm',
+  [ALERT_TYPES.STANDARD]: 'notifications',
+  [ALERT_TYPES.VIBRATION]: 'phone-portrait',
 };
 
 export default function ReminderCard({ reminder }) {
@@ -30,9 +30,12 @@ export default function ReminderCard({ reminder }) {
       <View style={[styles.accent, { backgroundColor: isActive ? colors.primary : colors.textMuted }]} />
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <View style={[styles.iconWrap, { backgroundColor: alert.color + '22' }]}>
-            <Ionicons name={alert.icon} size={20} color={alert.color} />
-          </View>
+          <Ionicons
+            name={alertIcons[reminder.alertType] || 'notifications'}
+            size={22}
+            color={isActive ? colors.primary : colors.textMuted}
+            style={styles.emoji}
+          />
           <View style={{ flex: 1 }}>
             <Text style={[styles.name, !isActive && { color: colors.textMuted }]} numberOfLines={1}>
               {reminder.label || reminder.location?.name}
@@ -53,14 +56,13 @@ export default function ReminderCard({ reminder }) {
 
         <View style={styles.bottomRow}>
           <View style={styles.pill}>
-            <Ionicons name="location-outline" size={11} color={colors.textSecondary} />
-            <Text style={styles.pillText}>{triggerLabel}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="location-outline" size={14} color={colors.textSecondary} style={{ marginRight: 3 }} />
+              <Text style={styles.pillText}>{triggerLabel}</Text>
+            </View>
           </View>
-          <TouchableOpacity
-            onPress={() => deleteReminder(reminder.id)}
-            style={styles.deleteButton}
-          >
-            <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
+          <TouchableOpacity onPress={() => deleteReminder(reminder.id)}>
+            <Ionicons name="trash-outline" size={18} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
