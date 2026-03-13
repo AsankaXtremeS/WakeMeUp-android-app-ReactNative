@@ -43,7 +43,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#0F0F18',
           borderTopColor: colors.border,
@@ -58,8 +58,12 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="home" label="Home" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -67,8 +71,12 @@ function MainTabs() {
         name="Reminders"
         component={RemindersScreen}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="list" label="Reminders" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'list' : 'list-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />

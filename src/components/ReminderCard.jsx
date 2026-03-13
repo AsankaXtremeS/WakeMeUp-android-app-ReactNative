@@ -19,6 +19,7 @@ export default function ReminderCard({ reminder }) {
   const deleteReminder = useReminderStore((s) => s.deleteReminder);
 
   const isActive = reminder.status === REMINDER_STATUS.ACTIVE;
+  const alert = alertConfig[reminder.alertType] ?? alertConfig[ALERT_TYPES.STANDARD];
   const triggerLabel =
     reminder.triggerType === TRIGGER_TYPES.DISTANCE
       ? `${reminder.distanceKm} km away`
@@ -47,9 +48,12 @@ export default function ReminderCard({ reminder }) {
             style={[styles.toggle, isActive && styles.toggleActive]}
             onPress={() => toggleReminder(reminder.id)}
           >
-            <Text style={styles.toggleText}>{isActive ? 'ON' : 'OFF'}</Text>
+            <Text style={[styles.toggleText, { color: isActive ? colors.primary : colors.textMuted }]}>
+              {isActive ? 'ON' : 'OFF'}
+            </Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.bottomRow}>
           <View style={styles.pill}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -86,7 +90,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  emoji: { fontSize: 22 },
+  iconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   name: { ...typography.bodyBold },
   address: { ...typography.caption, marginTop: 2 },
   toggle: {
@@ -101,17 +111,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGlow,
     borderColor: colors.primary,
   },
-  toggleText: { ...typography.captionBold, color: colors.primary, fontSize: 10 },
+  toggleText: { fontSize: 10, fontWeight: '700' },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: colors.bgElevated,
     borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
   },
   pillText: { ...typography.caption, color: colors.textSecondary },
+  deleteButton: { padding: 4 },
 });

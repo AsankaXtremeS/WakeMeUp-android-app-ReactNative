@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View, Text, StyleSheet,
+  ScrollView, TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import useReminderStore, { REMINDER_STATUS } from '../store/reminderStore';
 import { colors, typography, spacing, radius } from '../theme';
 import ReminderCard from '../components/ReminderCard';
@@ -23,10 +27,15 @@ export default function RemindersScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Reminders</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('MapScreen')}>
-          <Text style={styles.addButtonText}>+ Add</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('MapScreen')}
+        >
+          <Ionicons name="add" size={16} color="#fff" />
+          <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.tabs}>
         {TABS.map((tab) => (
           <TouchableOpacity
@@ -34,17 +43,26 @@ export default function RemindersScreen() {
             style={[styles.tab, activeTab === tab && styles.tabActive]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              {tab}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
         {filtered.length === 0 ? (
           <View style={styles.empty}>
+            <Ionicons name="checkmark-circle-outline" size={48} color={colors.textMuted} />
             <Text style={styles.emptyText}>No reminders here</Text>
           </View>
         ) : (
-          filtered.map((reminder) => <ReminderCard key={reminder.id} reminder={reminder} />)
+          filtered.map((reminder) => (
+            <ReminderCard key={reminder.id} reminder={reminder} />
+          ))
         )}
       </ScrollView>
     </SafeAreaView>
@@ -53,16 +71,45 @@ export default function RemindersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.md },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
   title: { ...typography.h2 },
-  addButton: { backgroundColor: colors.primary, borderRadius: radius.full, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
   addButtonText: { ...typography.captionBold, color: '#fff', fontSize: 13 },
-  tabs: { flexDirection: 'row', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.md },
-  tab: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
-  tabActive: { backgroundColor: colors.primaryGlow, borderColor: colors.primary },
+  tabs: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  tab: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tabActive: {
+    backgroundColor: colors.primaryGlow,
+    borderColor: colors.primary,
+  },
   tabText: { ...typography.captionBold, color: colors.textMuted },
   tabTextActive: { color: colors.primary },
   list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 100 },
-  empty: { alignItems: 'center', paddingTop: spacing.xxl },
+  empty: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.md },
   emptyText: { ...typography.body },
 });
