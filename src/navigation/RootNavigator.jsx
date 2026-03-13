@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 
@@ -42,11 +42,7 @@ function MainTabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? 'home' : 'home-outline'}
-              size={22}
-              color={color}
-            />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -55,11 +51,7 @@ function MainTabs() {
         component={RemindersScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? 'list' : 'list-outline'}
-              size={22}
-              color={color}
-            />
+            <Ionicons name={focused ? 'list' : 'list-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -67,9 +59,10 @@ function MainTabs() {
   );
 }
 
-export default function RootNavigator() {
+export default function RootNavigator({ navigationRef }) {
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={{
         dark: true,
         fonts: {

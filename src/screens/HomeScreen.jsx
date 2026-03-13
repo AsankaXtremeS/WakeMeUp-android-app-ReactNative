@@ -29,7 +29,6 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Good morning</Text>
             <Text style={styles.title}>WakeMeUp</Text>
           </View>
           <View style={styles.badge}>
