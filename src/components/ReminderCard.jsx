@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import useReminderStore, {
   ALERT_TYPES,
   TRIGGER_TYPES,
@@ -7,10 +8,10 @@ import useReminderStore, {
 } from '../store/reminderStore';
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
-const alertEmoji = {
-  [ALERT_TYPES.AGGRESSIVE]: '🚨',
-  [ALERT_TYPES.STANDARD]: '🔔',
-  [ALERT_TYPES.VIBRATION]: '📳',
+const alertIcons = {
+  [ALERT_TYPES.AGGRESSIVE]: 'alarm',
+  [ALERT_TYPES.STANDARD]: 'notifications',
+  [ALERT_TYPES.VIBRATION]: 'phone-portrait',
 };
 
 export default function ReminderCard({ reminder }) {
@@ -28,7 +29,12 @@ export default function ReminderCard({ reminder }) {
       <View style={[styles.accent, { backgroundColor: isActive ? colors.primary : colors.textMuted }]} />
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.emoji}>{alertEmoji[reminder.alertType] ?? '🔔'}</Text>
+          <Ionicons
+            name={alertIcons[reminder.alertType] || 'notifications'}
+            size={22}
+            color={isActive ? colors.primary : colors.textMuted}
+            style={styles.emoji}
+          />
           <View style={{ flex: 1 }}>
             <Text style={[styles.name, !isActive && { color: colors.textMuted }]} numberOfLines={1}>
               {reminder.label || reminder.location?.name}
@@ -46,10 +52,13 @@ export default function ReminderCard({ reminder }) {
         </View>
         <View style={styles.bottomRow}>
           <View style={styles.pill}>
-            <Text style={styles.pillText}>📍 {triggerLabel}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="location-outline" size={14} color={colors.textSecondary} style={{ marginRight: 3 }} />
+              <Text style={styles.pillText}>{triggerLabel}</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={() => deleteReminder(reminder.id)}>
-            <Text style={{ fontSize: 16 }}>🗑</Text>
+            <Ionicons name="trash-outline" size={18} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
     View, Text, StyleSheet, ScrollView,
     TouchableOpacity, Pressable,
@@ -19,35 +20,35 @@ export default function HomeScreen() {
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
                 <View style={styles.header}>
-                    <View>
-                        <Text style={styles.greeting}>Good morning 👋</Text>
-                        <Text style={styles.title}>WakeMeUp</Text>
-                    </View>
+                                        <View>
+          
+                                                <Text style={styles.title}>WakeMeUp</Text>
+                                        </View>
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>{activeReminders.length} active</Text>
                     </View>
                 </View>
 
                 <View style={styles.statsRow}>
-                    <StatCard label="Active" value={activeReminders.length} emoji="📍" />
+                    <StatCard label="Active" value={activeReminders.length} icon="location-outline" />
                     <StatCard label="Today" value={reminders.filter((r) => {
                         const today = new Date().toDateString();
                         return new Date(r.createdAt).toDateString() === today;
-                    }).length} emoji="📅" />
-                    <StatCard label="Total" value={reminders.length} emoji="🗂️" />
+                    }).length} icon="calendar-outline" />
+                    <StatCard label="Total" value={reminders.length} icon="albums-outline" />
                 </View>
 
                 <Text style={styles.sectionLabel}>Quick Add</Text>
                 <View style={styles.quickActions}>
                     <QuickActionButton
-                        emoji="📍"
+                        icon="location-outline"
                         label="Location Reminder"
                         subtitle="Alert near a place"
                         color={colors.primary}
                         onPress={() => navigation.navigate('MapScreen')}
                     />
                     <QuickActionButton
-                        emoji="⏰"
+                        icon="alarm-outline"
                         label="Time Alarm"
                         subtitle="Coming in v2"
                         color={colors.textMuted}
@@ -77,23 +78,23 @@ export default function HomeScreen() {
                 style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
                 onPress={() => navigation.navigate('MapScreen')}
             >
-                <Text style={styles.fabIcon}>+</Text>
+                <Ionicons name="add" size={38} color="#fff" />
             </Pressable>
         </SafeAreaView>
     );
 }
 
-function StatCard({ label, value, emoji }) {
+function StatCard({ label, value, icon }) {
     return (
         <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>{emoji}</Text>
+            <Ionicons name={icon} size={20} color={colors.primary} style={styles.statEmoji} />
             <Text style={styles.statValue}>{value}</Text>
             <Text style={styles.statLabel}>{label}</Text>
         </View>
     );
 }
 
-function QuickActionButton({ emoji, label, subtitle, color, onPress, disabled }) {
+function QuickActionButton({ icon, label, subtitle, color, onPress, disabled }) {
     return (
         <TouchableOpacity
             style={[styles.quickAction, disabled && styles.quickActionDisabled]}
@@ -101,8 +102,8 @@ function QuickActionButton({ emoji, label, subtitle, color, onPress, disabled })
             disabled={disabled}
             activeOpacity={0.75}
         >
-            <View style={[styles.quickActionIcon, { backgroundColor: color + '22' }]}>
-                <Text style={{ fontSize: 22 }}>{emoji}</Text>
+            <View style={[styles.quickActionIcon, { backgroundColor: color + '22' }]}> 
+                <Ionicons name={icon} size={22} color={color} />
             </View>
             <View style={{ flex: 1 }}>
                 <Text style={[styles.quickActionLabel, { color: disabled ? colors.textMuted : colors.textPrimary }]}>
@@ -110,7 +111,7 @@ function QuickActionButton({ emoji, label, subtitle, color, onPress, disabled })
                 </Text>
                 <Text style={styles.quickActionSub}>{subtitle}</Text>
             </View>
-            {!disabled && <Text style={{ color: colors.primary, fontSize: 20 }}>›</Text>}
+            {!disabled && <Ionicons name="chevron-forward" size={20} color={colors.primary} />}
         </TouchableOpacity>
     );
 }
@@ -118,7 +119,7 @@ function QuickActionButton({ emoji, label, subtitle, color, onPress, disabled })
 function EmptyState({ onPress }) {
     return (
         <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🗺️</Text>
+            <Ionicons name="map-outline" size={48} color={colors.primary} style={styles.emptyEmoji} />
             <Text style={styles.emptyTitle}>No active reminders</Text>
             <Text style={styles.emptyBody}>Tap the button below to add your first location reminder.</Text>
             <TouchableOpacity style={styles.emptyButton} onPress={onPress}>
