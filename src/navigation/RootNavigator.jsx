@@ -12,29 +12,6 @@ import SetupScreen from '../screens/SetupScreen';
 import AlarmScreen from '../screens/AlarmScreen';
 import RemindersScreen from '../screens/RemindersScreen';
 
-const TabIcon = ({ name, label, focused }) => (
-  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-    <Ionicons
-      name={focused ? name : name + '-outline'}
-      size={24}
-      color={focused ? colors.primary : colors.textMuted}
-      style={{ opacity: focused ? 1 : 0.7 }}
-    />
-    <Text
-      style={{
-        fontSize: 10,
-        fontWeight: '600',
-        color: focused ? colors.primary : colors.textMuted,
-        marginTop: 2,
-      }}
-      numberOfLines={1}
-      ellipsizeMode="tail"
-    >
-      {label}
-    </Text>
-  </View>
-);
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -50,8 +27,11 @@ function MainTabs() {
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 84 : 64,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-          paddingTop: 10, // Added top padding for better spacing
+          paddingTop: 8,
         },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
       }}
     >
       <Tab.Screen
@@ -103,27 +83,17 @@ export default function RootNavigator({ navigationRef }) {
         <Stack.Screen
           name="MapScreen"
           component={MapScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_bottom',
-          }}
+          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
           name="SetupScreen"
           component={SetupScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
           name="AlarmScreen"
           component={AlarmScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'fade',
-            gestureEnabled: false,
-          }}
+          options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

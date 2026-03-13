@@ -17,10 +17,7 @@ export default function MapScreen() {
   const navigation = useNavigation();
   const webViewRef = useRef(null);
 
-  const [userLocation, setUserLocation] = useState({
-    latitude: 7.8731,
-    longitude: 80.7718,
-  });
+  const [userLocation, setUserLocation] = useState({ latitude: 7.8731, longitude: 80.7718 });
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -29,7 +26,6 @@ export default function MapScreen() {
   const [radiusKm, setRadiusKm] = useState(1);
   const [mapReady, setMapReady] = useState(false);
 
-  // Get user location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -44,7 +40,6 @@ export default function MapScreen() {
     })();
   }, []);
 
-  // Send message to Leaflet map inside WebView
   const sendToMap = (action, data) => {
     webViewRef.current?.injectJavaScript(`
       window.handleAction('${action}', ${JSON.stringify(data)});
@@ -52,43 +47,31 @@ export default function MapScreen() {
     `);
   };
 
-  // When map is ready, fly to user location
   useEffect(() => {
     if (mapReady && !locationLoading) {
-      sendToMap('flyTo', {
-        lat: userLocation.latitude,
-        lng: userLocation.longitude,
-      });
+      sendToMap('flyTo', { lat: userLocation.latitude, lng: userLocation.longitude });
     }
   }, [mapReady, locationLoading]);
 
-  // Update circle when radius changes
   useEffect(() => {
-    if (selectedLocation) {
-      sendToMap('updateRadius', { radiusKm });
-    }
+    if (selectedLocation) sendToMap('updateRadius', { radiusKm });
   }, [radiusKm]);
 
-  // Handle messages from WebView (pin drop)
   const handleWebViewMessage = async (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'ready') {
         setMapReady(true);
       } else if (data.type === 'locationUpdate') {
-        // Update user location state from WebView GPS
         setUserLocation({ latitude: data.lat, longitude: data.lng });
       } else if (data.type === 'mapClick') {
         const { lat, lng } = data;
         setSelectedLocation({
-          latitude: lat,
-          longitude: lng,
+          latitude: lat, longitude: lng,
           name: 'Pinned Location',
           address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
         });
         sendToMap('setMarker', { lat, lng, radiusKm });
-
-        // Reverse geocode
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
@@ -108,7 +91,6 @@ export default function MapScreen() {
     } catch (e) {}
   };
 
-  // Search places
   const handleSearch = async (text) => {
     setSearchQuery(text);
     if (text.length < 3) { setSearchResults([]); return; }
@@ -131,30 +113,20 @@ export default function MapScreen() {
     const name = item.display_name.split(',')[0];
     setSearchQuery(name);
     setSearchResults([]);
-    setSelectedLocation({
-      latitude: lat, longitude: lng,
-      name, address: item.display_name,
-    });
+    setSelectedLocation({ latitude: lat, longitude: lng, name, address: item.display_name });
     sendToMap('setMarker', { lat, lng, radiusKm });
     sendToMap('flyTo', { lat, lng });
   };
 
   const handleMyLocation = () => {
-    sendToMap('flyToUser', {
-      lat: userLocation.latitude,
-      lng: userLocation.longitude,
-    });
+    sendToMap('flyToUser', { lat: userLocation.latitude, lng: userLocation.longitude });
   };
 
   const handleNext = () => {
     if (!selectedLocation) return;
-    navigation.navigate('SetupScreen', {
-      location: selectedLocation,
-      radiusKm: radiusKm,
-    });
+    navigation.navigate('SetupScreen', { location: selectedLocation, radiusKm });
   };
 
-  // Leaflet HTML map
   const leafletHTML = `
     <!DOCTYPE html>
     <html>
@@ -171,113 +143,77 @@ export default function MapScreen() {
     <body>
       <div id="map"></div>
       <script>
-var map = L.map('map', {
-  zoomControl: false,
-  attributionControl: false,
-}).setView([${userLocation.latitude}, ${userLocation.longitude}], 15);
+        var map = L.map('map', { zoomControl: false, attributionControl: false })
+          .setView([${userLocation.latitude}, ${userLocation.longitude}], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-}).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-var marker = null;
-var circle = null;
+        var marker = null;
+        var circle = null;
+        var currentLocationMarker = null;
+        var currentLocationPulse = null;
 
-// ── Current location dot ──────────────────────────────
-var currentLocationMarker = null;
-var currentLocationPulse = null;
+        function setCurrentLocation(lat, lng) {
+          if (currentLocationMarker) {
+            map.removeLayer(currentLocationMarker);
+            map.removeLayer(currentLocationPulse);
+          }
+          currentLocationPulse = L.circleMarker([lat, lng], {
+            radius: 14, color: '#6C63FF', fillColor: '#6C63FF',
+            fillOpacity: 0.15, weight: 1.5, opacity: 0.5,
+          }).addTo(map);
+          currentLocationMarker = L.circleMarker([lat, lng], {
+            radius: 7, color: '#ffffff', fillColor: '#4A90FF',
+            fillOpacity: 1, weight: 2.5,
+          }).addTo(map);
+        }
 
-function setCurrentLocation(lat, lng) {
-  if (currentLocationMarker) {
-    map.removeLayer(currentLocationMarker);
-    map.removeLayer(currentLocationPulse);
-  }
+        setCurrentLocation(${userLocation.latitude}, ${userLocation.longitude});
 
-  // Outer pulse ring
-  currentLocationPulse = L.circleMarker([lat, lng], {
-    radius: 14,
-    color: '#6C63FF',
-    fillColor: '#6C63FF',
-    fillOpacity: 0.15,
-    weight: 1.5,
-    opacity: 0.5,
-  }).addTo(map);
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            function(pos) {
+              setCurrentLocation(pos.coords.latitude, pos.coords.longitude);
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'locationUpdate', lat: pos.coords.latitude, lng: pos.coords.longitude,
+              }));
+            },
+            function(err) { console.warn('Geolocation error:', err); },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+          );
+        }
 
-  // Inner blue dot
-  currentLocationMarker = L.circleMarker([lat, lng], {
-    radius: 7,
-    color: '#ffffff',
-    fillColor: '#4A90FF',
-    fillOpacity: 1,
-    weight: 2.5,
-  }).addTo(map);
-}
+        var pinIcon = L.divIcon({
+          html: '<div style="width:18px;height:18px;background:#6C63FF;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
+          iconSize: [18, 18], iconAnchor: [9, 18], className: '',
+        });
 
-// Set initial location dot
-setCurrentLocation(${userLocation.latitude}, ${userLocation.longitude});
+        map.on('click', function(e) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'mapClick', lat: e.latlng.lat, lng: e.latlng.lng,
+          }));
+        });
 
-// Watch live location updates
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition(
-    function(pos) {
-      setCurrentLocation(pos.coords.latitude, pos.coords.longitude);
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'locationUpdate',
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      }));
-    },
-    function(err) { console.warn('Geolocation error:', err); },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-  );
-}
+        window.handleAction = function(action, data) {
+          if (action === 'flyTo') map.flyTo([data.lat, data.lng], 15, { duration: 1.2 });
+          if (action === 'flyToUser') map.flyTo([data.lat, data.lng], 16, { duration: 1.2 });
+          if (action === 'setMarker') {
+            if (marker) map.removeLayer(marker);
+            if (circle) map.removeLayer(circle);
+            marker = L.marker([data.lat, data.lng], { icon: pinIcon }).addTo(map);
+            circle = L.circle([data.lat, data.lng], {
+              radius: data.radiusKm * 1000, color: '#6C63FF',
+              fillColor: '#6C63FF', fillOpacity: 0.12, weight: 2,
+            }).addTo(map);
+          }
+          if (action === 'updateRadius') {
+            if (circle) circle.setRadius(data.radiusKm * 1000);
+          }
+        };
 
-// Custom purple pin icon
-var pinIcon = L.divIcon({
-  html: '<div style="width:18px;height:18px;background:#6C63FF;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
-  iconSize: [18, 18],
-  iconAnchor: [9, 18],
-  className: '',
-});
-
-// Click to drop pin
-map.on('click', function(e) {
-  window.ReactNativeWebView.postMessage(JSON.stringify({
-    type: 'mapClick',
-    lat: e.latlng.lat,
-    lng: e.latlng.lng,
-  }));
-});
-
-// Actions from React Native
-window.handleAction = function(action, data) {
-  if (action === 'flyTo') {
-    map.flyTo([data.lat, data.lng], 15, { duration: 1.2 });
-  }
-  if (action === 'setMarker') {
-    if (marker) map.removeLayer(marker);
-    if (circle) map.removeLayer(circle);
-    marker = L.marker([data.lat, data.lng], { icon: pinIcon }).addTo(map);
-    circle = L.circle([data.lat, data.lng], {
-      radius: data.radiusKm * 1000,
-      color: '#6C63FF',
-      fillColor: '#6C63FF',
-      fillOpacity: 0.12,
-      weight: 2,
-    }).addTo(map);
-  }
-  if (action === 'updateRadius') {
-    if (circle) circle.setRadius(data.radiusKm * 1000);
-  }
-  if (action === 'flyToUser') {
-    map.flyTo([data.lat, data.lng], 16, { duration: 1.2 });
-  }
-};
-
-// Tell React Native map is ready
-setTimeout(function() {
-  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));
-}, 500);
+        setTimeout(function() {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));
+        }, 500);
       </script>
     </body>
     </html>
@@ -285,18 +221,11 @@ setTimeout(function() {
 
   return (
     <View style={styles.container}>
-      {/* Leaflet Map */}
       <WebView
         ref={webViewRef}
         source={{ html: leafletHTML }}
         style={styles.map}
-        onMessage={(e) => {
-          try {
-            const data = JSON.parse(e.nativeEvent.data);
-            if (data.type === 'ready') setMapReady(true);
-            else handleWebViewMessage(e);
-          } catch {}
-        }}
+        onMessage={handleWebViewMessage}
         javaScriptEnabled
         domStorageEnabled
         startInLoadingState
@@ -308,7 +237,6 @@ setTimeout(function() {
         )}
       />
 
-      {/* Loading overlay */}
       {locationLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator color={colors.primary} size="large" />
@@ -316,15 +244,10 @@ setTimeout(function() {
         </View>
       )}
 
-      {/* Top bar */}
       <SafeAreaView style={styles.topBar} edges={['top']}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-
         <View style={styles.searchBar}>
           <Ionicons name="search" size={16} color={colors.textMuted} />
           <TextInput
@@ -346,7 +269,6 @@ setTimeout(function() {
         </View>
       </SafeAreaView>
 
-      {/* Search results */}
       {searchResults.length > 0 && (
         <View style={styles.searchResults}>
           <FlatList
@@ -354,10 +276,7 @@ setTimeout(function() {
             keyExtractor={(item) => item.place_id?.toString()}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.searchResultItem}
-                onPress={() => handleSelectResult(item)}
-              >
+              <TouchableOpacity style={styles.searchResultItem} onPress={() => handleSelectResult(item)}>
                 <Ionicons name="location-outline" size={16} color={colors.primary} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.resultName} numberOfLines={1}>
@@ -373,12 +292,10 @@ setTimeout(function() {
         </View>
       )}
 
-      {/* My location button */}
       <TouchableOpacity style={styles.myLocationButton} onPress={handleMyLocation}>
         <Ionicons name="navigate" size={20} color={colors.primary} />
       </TouchableOpacity>
 
-      {/* Hint */}
       {!selectedLocation && !locationLoading && (
         <View style={styles.hint}>
           <Ionicons name="hand-left-outline" size={14} color={colors.textMuted} />
@@ -386,7 +303,6 @@ setTimeout(function() {
         </View>
       )}
 
-      {/* Bottom panel */}
       {selectedLocation && (
         <View style={styles.bottomPanel}>
           <View style={styles.locationRow}>
@@ -394,41 +310,28 @@ setTimeout(function() {
               <Ionicons name="location" size={20} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.locationName} numberOfLines={1}>
-                {selectedLocation.name}
-              </Text>
-              <Text style={styles.locationAddress} numberOfLines={1}>
-                {selectedLocation.address}
-              </Text>
+              <Text style={styles.locationName} numberOfLines={1}>{selectedLocation.name}</Text>
+              <Text style={styles.locationAddress} numberOfLines={1}>{selectedLocation.address}</Text>
             </View>
-            <TouchableOpacity onPress={() => {
-              setSelectedLocation(null);
-              setSearchQuery('');
-            }}>
+            <TouchableOpacity onPress={() => { setSelectedLocation(null); setSearchQuery(''); }}>
               <Ionicons name="close-circle-outline" size={22} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
-          {/* Radius control */}
           <View style={styles.radiusRow}>
             <Ionicons name="resize-outline" size={14} color={colors.textSecondary} />
             <Text style={styles.radiusLabel}>Alert radius preview</Text>
-            <TouchableOpacity
-              style={styles.radiusBtn}
-              onPress={() => setRadiusKm((v) => Math.max(0.2, +(v - 0.2).toFixed(1)))}
-            >
+            <TouchableOpacity style={styles.radiusBtn}
+              onPress={() => setRadiusKm((v) => Math.max(0.2, +(v - 0.2).toFixed(1)))}>
               <Ionicons name="remove" size={16} color={colors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.radiusValue}>{radiusKm} km</Text>
-            <TouchableOpacity
-              style={styles.radiusBtn}
-              onPress={() => setRadiusKm((v) => Math.min(20, +(v + 0.2).toFixed(1)))}
-            >
+            <TouchableOpacity style={styles.radiusBtn}
+              onPress={() => setRadiusKm((v) => Math.min(20, +(v + 0.2).toFixed(1)))}>
               <Ionicons name="add" size={16} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
 
-          {/* Next button */}
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
             <Text style={styles.nextButtonText}>Set Reminder Here</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
@@ -442,52 +345,34 @@ setTimeout(function() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   map: { flex: 1 },
-
   loadingOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: colors.bg,
-    alignItems: 'center', justifyContent: 'center', gap: spacing.md,
+    backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', gap: spacing.md,
   },
   loadingText: { ...typography.body },
-
   topBar: {
     position: 'absolute', top: 0, left: 0, right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm,
   },
   backButton: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgCard,
     borderWidth: 1, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center',
-    ...shadows.card,
+    alignItems: 'center', justifyContent: 'center', ...shadows.card,
   },
   searchBar: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgCard,
-    borderRadius: radius.full,
+    backgroundColor: colors.bgCard, borderRadius: radius.full,
     borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    height: 44, gap: spacing.sm,
-    ...shadows.card,
+    paddingHorizontal: spacing.md, height: 44, gap: spacing.sm, ...shadows.card,
   },
-  searchInput: {
-    flex: 1, ...typography.body,
-    color: colors.textPrimary, padding: 0,
-  },
-
+  searchInput: { flex: 1, ...typography.body, color: colors.textPrimary, padding: 0 },
   searchResults: {
-    position: 'absolute',
-    top: 100, left: spacing.md, right: spacing.md,
-    backgroundColor: colors.bgCard,
-    borderRadius: radius.md,
+    position: 'absolute', top: 100, left: spacing.md, right: spacing.md,
+    backgroundColor: colors.bgCard, borderRadius: radius.md,
     borderWidth: 1, borderColor: colors.border,
-    maxHeight: 240,
-    ...shadows.card,
-    zIndex: 100,
+    maxHeight: 240, ...shadows.card, zIndex: 100,
   },
   searchResultItem: {
     flexDirection: 'row', alignItems: 'center',
@@ -496,28 +381,21 @@ const styles = StyleSheet.create({
   },
   resultName: { ...typography.bodyBold, fontSize: 13 },
   resultAddress: { ...typography.caption, marginTop: 1 },
-
   myLocationButton: {
-    position: 'absolute',
-    right: spacing.md, bottom: 220,
+    position: 'absolute', right: spacing.md, bottom: 220,
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: colors.bgCard,
     borderWidth: 1, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center',
-    ...shadows.card,
+    alignItems: 'center', justifyContent: 'center', ...shadows.card,
   },
-
   hint: {
     position: 'absolute', bottom: 40, alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.bgCard + 'EE',
-    borderRadius: radius.full,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    backgroundColor: colors.bgCard + 'EE', borderRadius: radius.full,
+    paddingVertical: spacing.sm, paddingHorizontal: spacing.md,
     borderWidth: 1, borderColor: colors.border,
   },
   hintText: { ...typography.caption },
-
   bottomPanel: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: colors.bgCard,
@@ -526,9 +404,7 @@ const styles = StyleSheet.create({
     padding: spacing.md, paddingBottom: spacing.xl,
     gap: spacing.md, ...shadows.card,
   },
-  locationRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-  },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   locationIconWrap: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.primaryGlow,
@@ -536,12 +412,10 @@ const styles = StyleSheet.create({
   },
   locationName: { ...typography.bodyBold },
   locationAddress: { ...typography.caption, marginTop: 2 },
-
   radiusRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     backgroundColor: colors.bg, borderRadius: radius.md,
-    padding: spacing.sm,
-    borderWidth: 1, borderColor: colors.border,
+    padding: spacing.sm, borderWidth: 1, borderColor: colors.border,
   },
   radiusLabel: { ...typography.caption, flex: 1 },
   radiusBtn: {
@@ -550,18 +424,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.border,
   },
-  radiusValue: {
-    ...typography.bodyBold, color: colors.primary,
-    minWidth: 45, textAlign: 'center',
-  },
-
+  radiusValue: { ...typography.bodyBold, color: colors.primary, minWidth: 45, textAlign: 'center' },
   nextButton: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', gap: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    paddingVertical: spacing.md,
-    ...shadows.glow(colors.primary),
+    backgroundColor: colors.primary, borderRadius: radius.full,
+    paddingVertical: spacing.md, ...shadows.glow(colors.primary),
   },
   nextButtonText: { ...typography.bodyBold, color: '#fff', fontSize: 16 },
 });
