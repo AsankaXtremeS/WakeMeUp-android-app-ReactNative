@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View, Text, StyleSheet,
-  TouchableOpacity, Animated, Vibration,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Vibration } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,16 +132,9 @@ export default function AlarmScreen() {
       <View style={[styles.bgGlow, { backgroundColor: config.color }]} />
 
       <View style={styles.content}>
-        {/* Pulsing icon */}
-        <Animated.View style={[
-          styles.iconRing,
-          {
-            transform: [{ scale: pulseAnim }],
-            borderColor: config.color + '66',
-          },
-        ]}>
-          <View style={[styles.iconInner, { backgroundColor: config.color + '33' }]}>
-            <Ionicons name="location" size={52} color={config.color} />
+        <Animated.View style={[styles.iconRing, { transform: [{ scale: pulseAnim }] }]}>
+          <View style={styles.iconInner}>
+            <Ionicons name="location" size={48} color={colors.primary} style={styles.iconEmoji} />
           </View>
         </Animated.View>
 
@@ -159,10 +150,24 @@ export default function AlarmScreen() {
 
         {/* Alert type badge */}
         <View style={styles.typeBadge}>
-          <Ionicons name={config.icon} size={14} color={config.color} />
-          <Text style={[styles.typeBadgeText, { color: config.color }]}>
-            {config.label}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            {alertType === 'aggressive' && (
+              <Ionicons name="alarm" size={16} color={colors.danger} style={{ marginRight: 2 }} />
+            )}
+            {alertType === 'vibration' && (
+              <Ionicons name="phone-portrait" size={16} color={colors.primary} style={{ marginRight: 2 }} />
+            )}
+            {alertType === 'standard' && (
+              <Ionicons name="notifications" size={16} color={colors.primary} style={{ marginRight: 2 }} />
+            )}
+            <Text style={styles.typeBadgeText}>
+              {alertType === 'aggressive'
+                ? 'Aggressive Wake-Up'
+                : alertType === 'vibration'
+                ? 'Vibration'
+                : 'Standard'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -182,7 +187,11 @@ export default function AlarmScreen() {
             color="#fff"
           />
           <Text style={styles.dismissText}>
-            {dismissed ? 'Dismissed!' : config.dismissText}
+            {dismissed
+              ? 'Dismissed'
+              : alertType === 'aggressive'
+              ? "I'm Awake — Dismiss"
+              : 'Dismiss'}
           </Text>
         </TouchableOpacity>
       </View>

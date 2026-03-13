@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View, Text, StyleSheet,
-  TouchableOpacity, ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,20 +8,9 @@ import useReminderStore, { ALERT_TYPES, TRIGGER_TYPES } from '../store/reminderS
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
 const ALERT_OPTIONS = [
-  {
-    type: ALERT_TYPES.STANDARD,
-    icon: 'notifications',
-    color: colors.primary,
-    label: 'Sound + Vibration',
-    subtitle: 'Alarm sound with vibration',
-  },
-  {
-    type: ALERT_TYPES.VIBRATION,
-    icon: 'phone-portrait',
-    color: colors.warning,
-    label: 'Vibration Only',
-    subtitle: 'Silent but physical alert',
-  },
+  { type: ALERT_TYPES.AGGRESSIVE, icon: 'alarm', label: 'Aggressive', subtitle: 'Persistent alarm + puzzle to dismiss' },
+  { type: ALERT_TYPES.STANDARD, icon: 'notifications', label: 'Standard', subtitle: 'Sound + vibration notification' },
+  { type: ALERT_TYPES.VIBRATION, icon: 'phone-portrait', label: 'Vibration Only', subtitle: 'Silent but physical alert' },
 ];
 
 export default function SetupScreen() {
@@ -74,9 +61,7 @@ export default function SetupScreen() {
 
         {/* Destination */}
         <View style={styles.destinationCard}>
-          <View style={styles.destIconWrap}>
-            <Ionicons name="location" size={20} color={colors.primary} />
-          </View>
+          <Ionicons name="location-outline" size={24} color={colors.primary} style={styles.destinationEmoji} />
           <View style={{ flex: 1 }}>
             <Text style={styles.destinationName} numberOfLines={1}>
               {location.name}
@@ -93,18 +78,8 @@ export default function SetupScreen() {
         {/* Trigger type */}
         <Text style={styles.sectionLabel}>Alert me by</Text>
         <View style={styles.segmentRow}>
-          <SegmentButton
-            iconName="resize-outline"
-            label="Distance"
-            active={triggerType === TRIGGER_TYPES.DISTANCE}
-            onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)}
-          />
-          <SegmentButton
-            iconName="time-outline"
-            label="ETA"
-            active={triggerType === TRIGGER_TYPES.ETA}
-            onPress={() => setTriggerType(TRIGGER_TYPES.ETA)}
-          />
+          <SegmentButton icon="resize-outline" label="Distance" active={triggerType === TRIGGER_TYPES.DISTANCE} onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)} />
+          <SegmentButton icon="time-outline" label="ETA" active={triggerType === TRIGGER_TYPES.ETA} onPress={() => setTriggerType(TRIGGER_TYPES.ETA)} />
         </View>
 
         {/* Value control */}
@@ -164,12 +139,7 @@ export default function SetupScreen() {
               onPress={() => setAlertType(opt.type)}
               activeOpacity={0.75}
             >
-              <View style={[
-                styles.alertIconWrap,
-                { backgroundColor: opt.color + '22' },
-              ]}>
-                <Ionicons name={opt.icon} size={20} color={opt.color} />
-              </View>
+              <Ionicons name={opt.icon} size={24} color={alertType === opt.type ? colors.primary : colors.textMuted} style={styles.alertEmoji} />
               <View style={{ flex: 1 }}>
                 <Text style={[
                   styles.alertLabel,
@@ -188,8 +158,10 @@ export default function SetupScreen() {
 
         {/* Save */}
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-          <Text style={styles.saveButtonText}>Set Reminder</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.saveButtonText}>Set Reminder</Text>
+            <Ionicons name="checkmark-done" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -203,16 +175,13 @@ export default function SetupScreen() {
   );
 }
 
-function SegmentButton({ iconName, label, active, onPress }) {
+function SegmentButton({ icon, label, active, onPress }) {
   return (
-    <TouchableOpacity
-      style={[styles.segment, active && styles.segmentActive]}
-      onPress={onPress}
-    >
-      <Ionicons name={iconName} size={16} color={active ? '#fff' : colors.textMuted} />
-      <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-        {label}
-      </Text>
+    <TouchableOpacity style={[styles.segment, active && styles.segmentActive]} onPress={onPress}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Ionicons name={icon} size={16} color={active ? '#fff' : colors.textMuted} />
+        <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
