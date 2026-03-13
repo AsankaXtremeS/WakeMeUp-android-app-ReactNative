@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  View, Text, StyleSheet,
+  TouchableOpacity, ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,9 +10,20 @@ import useReminderStore, { ALERT_TYPES, TRIGGER_TYPES } from '../store/reminderS
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
 const ALERT_OPTIONS = [
-  { type: ALERT_TYPES.AGGRESSIVE, icon: 'alarm', label: 'Aggressive', subtitle: 'Persistent alarm + puzzle to dismiss' },
-  { type: ALERT_TYPES.STANDARD, icon: 'notifications', label: 'Standard', subtitle: 'Sound + vibration notification' },
-  { type: ALERT_TYPES.VIBRATION, icon: 'phone-portrait', label: 'Vibration Only', subtitle: 'Silent but physical alert' },
+  {
+    type: ALERT_TYPES.STANDARD,
+    icon: 'notifications',
+    color: colors.primary,
+    label: 'Sound + Vibration',
+    subtitle: 'Alarm sound with vibration',
+  },
+  {
+    type: ALERT_TYPES.VIBRATION,
+    icon: 'phone-portrait',
+    color: colors.warning,
+    label: 'Vibration Only',
+    subtitle: 'Silent but physical alert',
+  },
 ];
 
 export default function SetupScreen() {
@@ -19,10 +32,8 @@ export default function SetupScreen() {
   const addReminder = useReminderStore((s) => s.addReminder);
 
   const location = route.params?.location ?? {
-    latitude: 0, longitude: 0,
-    name: 'Unknown Location', address: '',
+    latitude: 0, longitude: 0, name: 'Unknown Location', address: '',
   };
-
   const prefilledRadius = route.params?.radiusKm ?? 1;
 
   const [triggerType, setTriggerType] = useState(TRIGGER_TYPES.DISTANCE);
@@ -31,26 +42,15 @@ export default function SetupScreen() {
   const [alertType, setAlertType] = useState(ALERT_TYPES.STANDARD);
 
   const handleSave = () => {
-    addReminder({
-      location,
-      label: location.name,
-      triggerType,
-      distanceKm,
-      etaMinutes,
-      alertType,
-    });
+    addReminder({ location, label: location.name, triggerType, distanceKm, etaMinutes, alertType });
     navigation.navigate('MainTabs', { screen: 'Home' });
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.handle} />
 
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
@@ -59,56 +59,49 @@ export default function SetupScreen() {
           <View style={{ width: 22 }} />
         </View>
 
-        {/* Destination */}
         <View style={styles.destinationCard}>
-          <Ionicons name="location-outline" size={24} color={colors.primary} style={styles.destinationEmoji} />
+          <View style={styles.destIconWrap}>
+            <Ionicons name="location" size={20} color={colors.primary} />
+          </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.destinationName} numberOfLines={1}>
-              {location.name}
-            </Text>
-            <Text style={styles.destinationAddress} numberOfLines={1}>
-              {location.address}
-            </Text>
+            <Text style={styles.destinationName} numberOfLines={1}>{location.name}</Text>
+            <Text style={styles.destinationAddress} numberOfLines={1}>{location.address}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.changeText}>Change</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Trigger type */}
         <Text style={styles.sectionLabel}>Alert me by</Text>
         <View style={styles.segmentRow}>
-          <SegmentButton icon="resize-outline" label="Distance" active={triggerType === TRIGGER_TYPES.DISTANCE} onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)} />
-          <SegmentButton icon="time-outline" label="ETA" active={triggerType === TRIGGER_TYPES.ETA} onPress={() => setTriggerType(TRIGGER_TYPES.ETA)} />
+          <SegmentButton
+            iconName="resize-outline" label="Distance"
+            active={triggerType === TRIGGER_TYPES.DISTANCE}
+            onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)}
+          />
+          <SegmentButton
+            iconName="time-outline" label="ETA"
+            active={triggerType === TRIGGER_TYPES.ETA}
+            onPress={() => setTriggerType(TRIGGER_TYPES.ETA)}
+          />
         </View>
 
-        {/* Value control */}
         {triggerType === TRIGGER_TYPES.DISTANCE ? (
           <>
             <ValueControl
-              label="Distance"
-              value={`${distanceKm}`}
-              unit="km away"
+              label="Distance" value={`${distanceKm}`} unit="km away"
               iconName="resize-outline"
-              onDecrement={() =>
-                setDistanceKm((v) => Math.max(0.2, +(v - 0.2).toFixed(1)))
-              }
-              onIncrement={() =>
-                setDistanceKm((v) => Math.min(20, +(v + 0.2).toFixed(1)))
-              }
+              onDecrement={() => setDistanceKm((v) => Math.max(0.2, +(v - 0.2).toFixed(1)))}
+              onIncrement={() => setDistanceKm((v) => Math.min(20, +(v + 0.2).toFixed(1)))}
             />
             <View style={styles.prefilledNotice}>
               <Ionicons name="information-circle-outline" size={14} color={colors.primary} />
-              <Text style={styles.prefilledText}>
-                Pre-filled from map. Edit freely.
-              </Text>
+              <Text style={styles.prefilledText}>Pre-filled from map. Edit freely.</Text>
             </View>
           </>
         ) : (
           <ValueControl
-            label="ETA"
-            value={`${etaMinutes}`}
-            unit="min before arrival"
+            label="ETA" value={`${etaMinutes}`} unit="min before arrival"
             iconName="time-outline"
             onDecrement={() => setEtaMinutes((v) => Math.max(2, v - 1))}
             onIncrement={() => setEtaMinutes((v) => Math.min(60, v + 1))}
@@ -118,33 +111,24 @@ export default function SetupScreen() {
         {distanceKm < 0.3 && triggerType === TRIGGER_TYPES.DISTANCE && (
           <View style={styles.warningRow}>
             <Ionicons name="warning-outline" size={14} color={colors.warning} />
-            <Text style={styles.warningText}>
-              Minimum reliable geofence is 200m
-            </Text>
+            <Text style={styles.warningText}>Minimum reliable geofence is 200m</Text>
           </View>
         )}
 
-        {/* Alert type */}
-        <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>
-          Alert type
-        </Text>
+        <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Alert type</Text>
         <View style={styles.alertOptions}>
           {ALERT_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.type}
-              style={[
-                styles.alertOption,
-                alertType === opt.type && styles.alertOptionActive,
-              ]}
+              style={[styles.alertOption, alertType === opt.type && styles.alertOptionActive]}
               onPress={() => setAlertType(opt.type)}
               activeOpacity={0.75}
             >
-              <Ionicons name={opt.icon} size={24} color={alertType === opt.type ? colors.primary : colors.textMuted} style={styles.alertEmoji} />
+              <View style={[styles.alertIconWrap, { backgroundColor: opt.color + '22' }]}>
+                <Ionicons name={opt.icon} size={20} color={opt.color} />
+              </View>
               <View style={{ flex: 1 }}>
-                <Text style={[
-                  styles.alertLabel,
-                  alertType === opt.type && { color: colors.primary },
-                ]}>
+                <Text style={[styles.alertLabel, alertType === opt.type && { color: colors.primary }]}>
                   {opt.label}
                 </Text>
                 <Text style={styles.alertSubtitle}>{opt.subtitle}</Text>
@@ -156,18 +140,12 @@ export default function SetupScreen() {
           ))}
         </View>
 
-        {/* Save */}
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={styles.saveButtonText}>Set Reminder</Text>
-            <Ionicons name="checkmark-done" size={20} color="#fff" />
-          </View>
+          <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+          <Text style={styles.saveButtonText}>Set Reminder</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -175,13 +153,11 @@ export default function SetupScreen() {
   );
 }
 
-function SegmentButton({ icon, label, active, onPress }) {
+function SegmentButton({ iconName, label, active, onPress }) {
   return (
     <TouchableOpacity style={[styles.segment, active && styles.segmentActive]} onPress={onPress}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <Ionicons name={icon} size={16} color={active ? '#fff' : colors.textMuted} />
-        <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
-      </View>
+      <Ionicons name={iconName} size={16} color={active ? '#fff' : colors.textMuted} />
+      <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -213,9 +189,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgCard },
   content: { padding: spacing.md, paddingBottom: spacing.xl },
   handle: {
-    width: 40, height: 4,
-    backgroundColor: colors.border, borderRadius: 2,
-    alignSelf: 'center', marginBottom: spacing.md,
+    width: 40, height: 4, backgroundColor: colors.border,
+    borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md,
   },
   header: {
     flexDirection: 'row', alignItems: 'center',
@@ -226,8 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bg, borderRadius: radius.md,
     padding: spacing.md, gap: spacing.sm,
-    borderWidth: 1, borderColor: colors.border,
-    marginBottom: spacing.lg,
+    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.lg,
   },
   destIconWrap: {
     width: 40, height: 40, borderRadius: 20,
@@ -240,13 +214,12 @@ const styles = StyleSheet.create({
   sectionLabel: { ...typography.label, marginBottom: spacing.sm },
   segmentRow: {
     flexDirection: 'row', backgroundColor: colors.bg,
-    borderRadius: radius.md, padding: 4, gap: 4,
-    marginBottom: spacing.md,
+    borderRadius: radius.md, padding: 4, gap: 4, marginBottom: spacing.md,
   },
   segment: {
-    flex: 1, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center',
-    paddingVertical: spacing.sm, borderRadius: radius.sm, gap: 6,
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', paddingVertical: spacing.sm,
+    borderRadius: radius.sm, gap: 6,
   },
   segmentActive: { backgroundColor: colors.primary },
   segmentText: { ...typography.bodyBold, color: colors.textMuted },
@@ -255,14 +228,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg, borderRadius: radius.md,
     padding: spacing.md, borderWidth: 1, borderColor: colors.border,
   },
-  valueLabelRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 6, marginBottom: spacing.sm,
-  },
-  valueRow: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  valueLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm },
+  valueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   valueButton: {
     width: 48, height: 48, borderRadius: radius.sm,
     backgroundColor: colors.bgElevated,
@@ -279,10 +246,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.primary + '33',
   },
   prefilledText: { ...typography.caption, color: colors.primary },
-  warningRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: spacing.sm, marginTop: spacing.sm,
-  },
+  warningRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
   warningText: { ...typography.caption, color: colors.warning },
   alertOptions: { gap: spacing.sm },
   alertOption: {
@@ -291,10 +255,7 @@ const styles = StyleSheet.create({
     padding: spacing.md, gap: spacing.md,
     borderWidth: 1, borderColor: colors.border,
   },
-  alertOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryGlow,
-  },
+  alertOptionActive: { borderColor: colors.primary, backgroundColor: colors.primaryGlow },
   alertIconWrap: {
     width: 42, height: 42, borderRadius: radius.sm,
     alignItems: 'center', justifyContent: 'center',

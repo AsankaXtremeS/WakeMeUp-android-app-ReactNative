@@ -14,6 +14,24 @@ const alertIcons = {
   [ALERT_TYPES.VIBRATION]: 'phone-portrait',
 };
 
+const alertConfig = {
+  [ALERT_TYPES.AGGRESSIVE]: {
+    icon: 'alarm',
+    color: colors.danger,
+    label: 'Aggressive Alert',
+  },
+  [ALERT_TYPES.STANDARD]: {
+    icon: 'notifications',
+    color: colors.primary,
+    label: 'Standard Alert',
+  },
+  [ALERT_TYPES.VIBRATION]: {
+    icon: 'phone-portrait',
+    color: colors.warning,
+    label: 'Vibration Alert',
+  },
+};
+
 export default function ReminderCard({ reminder }) {
   const toggleReminder = useReminderStore((s) => s.toggleReminder);
   const deleteReminder = useReminderStore((s) => s.deleteReminder);
