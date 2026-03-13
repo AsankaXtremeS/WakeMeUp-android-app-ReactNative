@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Vibration } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import useReminderStore from '../store/reminderStore';
@@ -48,7 +49,7 @@ export default function AlarmScreen() {
       <View style={styles.content}>
         <Animated.View style={[styles.iconRing, { transform: [{ scale: pulseAnim }] }]}>
           <View style={styles.iconInner}>
-            <Text style={styles.iconEmoji}>📍</Text>
+            <Ionicons name="location" size={48} color={colors.primary} style={styles.iconEmoji} />
           </View>
         </Animated.View>
         <Text style={styles.headline}>Almost there!</Text>
@@ -59,9 +60,24 @@ export default function AlarmScreen() {
             : "You're getting close to your stop."}
         </Text>
         <View style={styles.typeBadge}>
-          <Text style={styles.typeBadgeText}>
-            {alertType === 'aggressive' ? '🚨 Aggressive Wake-Up' : alertType === 'vibration' ? '📳 Vibration' : '🔔 Standard'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            {alertType === 'aggressive' && (
+              <Ionicons name="alarm" size={16} color={colors.danger} style={{ marginRight: 2 }} />
+            )}
+            {alertType === 'vibration' && (
+              <Ionicons name="phone-portrait" size={16} color={colors.primary} style={{ marginRight: 2 }} />
+            )}
+            {alertType === 'standard' && (
+              <Ionicons name="notifications" size={16} color={colors.primary} style={{ marginRight: 2 }} />
+            )}
+            <Text style={styles.typeBadgeText}>
+              {alertType === 'aggressive'
+                ? 'Aggressive Wake-Up'
+                : alertType === 'vibration'
+                ? 'Vibration'
+                : 'Standard'}
+            </Text>
+          </View>
         </View>
       </View>
       <View style={styles.footer}>
@@ -71,7 +87,11 @@ export default function AlarmScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.dismissText}>
-            {dismissed ? '✓ Dismissed' : alertType === 'aggressive' ? "👋 I'm Awake — Dismiss" : 'Dismiss'}
+            {dismissed
+              ? 'Dismissed'
+              : alertType === 'aggressive'
+              ? "I'm Awake — Dismiss"
+              : 'Dismiss'}
           </Text>
         </TouchableOpacity>
       </View>

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import useReminderStore, { ALERT_TYPES, TRIGGER_TYPES } from '../store/reminderStore';
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
 const ALERT_OPTIONS = [
-  { type: ALERT_TYPES.AGGRESSIVE, emoji: '🚨', label: 'Aggressive', subtitle: 'Persistent alarm + puzzle to dismiss' },
-  { type: ALERT_TYPES.STANDARD, emoji: '🔔', label: 'Standard', subtitle: 'Sound + vibration notification' },
-  { type: ALERT_TYPES.VIBRATION, emoji: '📳', label: 'Vibration Only', subtitle: 'Silent but physical alert' },
+  { type: ALERT_TYPES.AGGRESSIVE, icon: 'alarm', label: 'Aggressive', subtitle: 'Persistent alarm + puzzle to dismiss' },
+  { type: ALERT_TYPES.STANDARD, icon: 'notifications', label: 'Standard', subtitle: 'Sound + vibration notification' },
+  { type: ALERT_TYPES.VIBRATION, icon: 'phone-portrait', label: 'Vibration Only', subtitle: 'Silent but physical alert' },
 ];
 
 export default function SetupScreen() {
@@ -36,7 +37,7 @@ export default function SetupScreen() {
         <View style={styles.handle} />
 
         <View style={styles.destinationCard}>
-          <Text style={styles.destinationEmoji}>📍</Text>
+          <Ionicons name="location-outline" size={24} color={colors.primary} style={styles.destinationEmoji} />
           <View style={{ flex: 1 }}>
             <Text style={styles.destinationName} numberOfLines={1}>{location.name}</Text>
             <Text style={styles.destinationAddress} numberOfLines={1}>{location.address}</Text>
@@ -48,8 +49,8 @@ export default function SetupScreen() {
 
         <Text style={styles.sectionLabel}>Alert me by</Text>
         <View style={styles.segmentRow}>
-          <SegmentButton label="📏  Distance" active={triggerType === TRIGGER_TYPES.DISTANCE} onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)} />
-          <SegmentButton label="⏱  ETA" active={triggerType === TRIGGER_TYPES.ETA} onPress={() => setTriggerType(TRIGGER_TYPES.ETA)} />
+          <SegmentButton icon="resize-outline" label="Distance" active={triggerType === TRIGGER_TYPES.DISTANCE} onPress={() => setTriggerType(TRIGGER_TYPES.DISTANCE)} />
+          <SegmentButton icon="time-outline" label="ETA" active={triggerType === TRIGGER_TYPES.ETA} onPress={() => setTriggerType(TRIGGER_TYPES.ETA)} />
         </View>
 
         {triggerType === TRIGGER_TYPES.DISTANCE ? (
@@ -75,7 +76,7 @@ export default function SetupScreen() {
               onPress={() => setAlertType(opt.type)}
               activeOpacity={0.75}
             >
-              <Text style={styles.alertEmoji}>{opt.emoji}</Text>
+              <Ionicons name={opt.icon} size={24} color={alertType === opt.type ? colors.primary : colors.textMuted} style={styles.alertEmoji} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.alertLabel, alertType === opt.type && { color: colors.primary }]}>{opt.label}</Text>
                 <Text style={styles.alertSubtitle}>{opt.subtitle}</Text>
@@ -86,7 +87,10 @@ export default function SetupScreen() {
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Set Reminder 🎯</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.saveButtonText}>Set Reminder</Text>
+            <Ionicons name="checkmark-done" size={20} color="#fff" />
+          </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
           <Text style={styles.cancelText}>Cancel</Text>
@@ -96,10 +100,13 @@ export default function SetupScreen() {
   );
 }
 
-function SegmentButton({ label, active, onPress }) {
+function SegmentButton({ icon, label, active, onPress }) {
   return (
     <TouchableOpacity style={[styles.segment, active && styles.segmentActive]} onPress={onPress}>
-      <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Ionicons name={icon} size={16} color={active ? '#fff' : colors.textMuted} />
+        <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }

@@ -27,6 +27,8 @@ const TabIcon = ({ name, label, focused }) => (
         color: focused ? colors.primary : colors.textMuted,
         marginTop: 2,
       }}
+      numberOfLines={1}
+      ellipsizeMode="tail"
     >
       {label}
     </Text>
@@ -48,6 +50,7 @@ function MainTabs() {
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 84 : 64,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 10, // Added top padding for better spacing
         },
       }}
     >
