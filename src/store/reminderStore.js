@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 
 export const ALERT_TYPES = {
-  AGGRESSIVE: 'aggressive',
   STANDARD: 'standard',
   VIBRATION: 'vibration',
 };

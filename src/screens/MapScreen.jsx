@@ -73,7 +73,12 @@ export default function MapScreen() {
   const handleWebViewMessage = async (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'mapClick') {
+      if (data.type === 'ready') {
+        setMapReady(true);
+      } else if (data.type === 'locationUpdate') {
+        // Update user location state from WebView GPS
+        setUserLocation({ latitude: data.lat, longitude: data.lng });
+      } else if (data.type === 'mapClick') {
         const { lat, lng } = data;
         setSelectedLocation({
           latitude: lat,
@@ -91,10 +96,12 @@ export default function MapScreen() {
           );
           const result = await res.json();
           if (result?.display_name) {
-            const name = result.display_name.split(',')[0];
-            const address = result.display_name;
-            setSelectedLocation({ latitude: lat, longitude: lng, name, address });
-            setSearchQuery(name);
+            setSelectedLocation({
+              latitude: lat, longitude: lng,
+              name: result.display_name.split(',')[0],
+              address: result.display_name,
+            });
+            setSearchQuery(result.display_name.split(',')[0]);
           }
         } catch (e) {}
       }
@@ -133,7 +140,7 @@ export default function MapScreen() {
   };
 
   const handleMyLocation = () => {
-    sendToMap('flyTo', {
+    sendToMap('flyToUser', {
       lat: userLocation.latitude,
       lng: userLocation.longitude,
     });
@@ -141,7 +148,10 @@ export default function MapScreen() {
 
   const handleNext = () => {
     if (!selectedLocation) return;
-    navigation.navigate('SetupScreen', { location: selectedLocation });
+    navigation.navigate('SetupScreen', {
+      location: selectedLocation,
+      radiusKm: radiusKm,
+    });
   };
 
   // Leaflet HTML map
@@ -161,61 +171,113 @@ export default function MapScreen() {
     <body>
       <div id="map"></div>
       <script>
-        var map = L.map('map', {
-          zoomControl: false,
-          attributionControl: false,
-        }).setView([${userLocation.latitude}, ${userLocation.longitude}], 13);
+var map = L.map('map', {
+  zoomControl: false,
+  attributionControl: false,
+}).setView([${userLocation.latitude}, ${userLocation.longitude}], 15);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-        }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+}).addTo(map);
 
-        var marker = null;
-        var circle = null;
+var marker = null;
+var circle = null;
 
-        // Custom purple pin icon
-        var pinIcon = L.divIcon({
-          html: '<div style="width:18px;height:18px;background:#6C63FF;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
-          iconSize: [18, 18],
-          iconAnchor: [9, 18],
-          className: '',
-        });
+// ── Current location dot ──────────────────────────────
+var currentLocationMarker = null;
+var currentLocationPulse = null;
 
-        // Click to drop pin
-        map.on('click', function(e) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'mapClick',
-            lat: e.latlng.lat,
-            lng: e.latlng.lng,
-          }));
-        });
+function setCurrentLocation(lat, lng) {
+  if (currentLocationMarker) {
+    map.removeLayer(currentLocationMarker);
+    map.removeLayer(currentLocationPulse);
+  }
 
-        // Actions from React Native
-        window.handleAction = function(action, data) {
-          if (action === 'flyTo') {
-            map.flyTo([data.lat, data.lng], 15, { duration: 1.2 });
-          }
-          if (action === 'setMarker') {
-            if (marker) map.removeLayer(marker);
-            if (circle) map.removeLayer(circle);
-            marker = L.marker([data.lat, data.lng], { icon: pinIcon }).addTo(map);
-            circle = L.circle([data.lat, data.lng], {
-              radius: data.radiusKm * 1000,
-              color: '#6C63FF',
-              fillColor: '#6C63FF',
-              fillOpacity: 0.12,
-              weight: 2,
-            }).addTo(map);
-          }
-          if (action === 'updateRadius') {
-            if (circle) circle.setRadius(data.radiusKm * 1000);
-          }
-        };
+  // Outer pulse ring
+  currentLocationPulse = L.circleMarker([lat, lng], {
+    radius: 14,
+    color: '#6C63FF',
+    fillColor: '#6C63FF',
+    fillOpacity: 0.15,
+    weight: 1.5,
+    opacity: 0.5,
+  }).addTo(map);
 
-        // Tell React Native map is ready
-        setTimeout(function() {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));
-        }, 500);
+  // Inner blue dot
+  currentLocationMarker = L.circleMarker([lat, lng], {
+    radius: 7,
+    color: '#ffffff',
+    fillColor: '#4A90FF',
+    fillOpacity: 1,
+    weight: 2.5,
+  }).addTo(map);
+}
+
+// Set initial location dot
+setCurrentLocation(${userLocation.latitude}, ${userLocation.longitude});
+
+// Watch live location updates
+if (navigator.geolocation) {
+  navigator.geolocation.watchPosition(
+    function(pos) {
+      setCurrentLocation(pos.coords.latitude, pos.coords.longitude);
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'locationUpdate',
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      }));
+    },
+    function(err) { console.warn('Geolocation error:', err); },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
+}
+
+// Custom purple pin icon
+var pinIcon = L.divIcon({
+  html: '<div style="width:18px;height:18px;background:#6C63FF;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 18],
+  className: '',
+});
+
+// Click to drop pin
+map.on('click', function(e) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    type: 'mapClick',
+    lat: e.latlng.lat,
+    lng: e.latlng.lng,
+  }));
+});
+
+// Actions from React Native
+window.handleAction = function(action, data) {
+  if (action === 'flyTo') {
+    map.flyTo([data.lat, data.lng], 15, { duration: 1.2 });
+  }
+  if (action === 'setMarker') {
+    if (marker) map.removeLayer(marker);
+    if (circle) map.removeLayer(circle);
+    marker = L.marker([data.lat, data.lng], { icon: pinIcon }).addTo(map);
+    circle = L.circle([data.lat, data.lng], {
+      radius: data.radiusKm * 1000,
+      color: '#6C63FF',
+      fillColor: '#6C63FF',
+      fillOpacity: 0.12,
+      weight: 2,
+    }).addTo(map);
+  }
+  if (action === 'updateRadius') {
+    if (circle) circle.setRadius(data.radiusKm * 1000);
+  }
+  if (action === 'flyToUser') {
+    map.flyTo([data.lat, data.lng], 16, { duration: 1.2 });
+  }
+};
+
+// Tell React Native map is ready
+setTimeout(function() {
+  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));
+}, 500);
       </script>
     </body>
     </html>

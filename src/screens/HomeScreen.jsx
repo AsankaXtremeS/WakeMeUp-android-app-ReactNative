@@ -137,10 +137,6 @@ function EmptyState({ onPress }) {
       <Text style={styles.emptyBody}>
         Tap the button below to add your first location reminder.
       </Text>
-      <TouchableOpacity style={styles.emptyButton} onPress={onPress}>
-        <Ionicons name="add-circle-outline" size={18} color="#fff" />
-        <Text style={styles.emptyButtonText}>Add Location Reminder</Text>
-      </TouchableOpacity>
     </View>
   );
 }
