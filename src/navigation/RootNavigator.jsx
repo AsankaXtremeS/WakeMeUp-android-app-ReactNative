@@ -12,27 +12,6 @@ import SetupScreen from '../screens/SetupScreen';
 import AlarmScreen from '../screens/AlarmScreen';
 import RemindersScreen from '../screens/RemindersScreen';
 
-const TabIcon = ({ name, label, focused }) => (
-  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-    <Ionicons
-      name={focused ? name : name + '-outline'}
-      size={24}
-      color={focused ? colors.primary : colors.textMuted}
-      style={{ opacity: focused ? 1 : 0.7 }}
-    />
-    <Text
-      style={{
-        fontSize: 10,
-        fontWeight: '600',
-        color: focused ? colors.primary : colors.textMuted,
-        marginTop: 2,
-      }}
-    >
-      {label}
-    </Text>
-  </View>
-);
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -41,13 +20,20 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#0F0F18',
           borderTopColor: colors.border,
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 84 : 64,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
         },
       }}
     >
@@ -55,8 +41,12 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="home" label="Home" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -64,8 +54,12 @@ function MainTabs() {
         name="Reminders"
         component={RemindersScreen}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="list" label="Reminders" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'list' : 'list-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />

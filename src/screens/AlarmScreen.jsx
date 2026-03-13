@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Vibration } from 'react-native';
+import {
+  View, Text, StyleSheet,
+  TouchableOpacity, Animated, Vibration,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import useReminderStore from '../store/reminderStore';
 import { colors, typography, spacing, radius } from '../theme';
 
@@ -42,36 +46,52 @@ export default function AlarmScreen() {
     setTimeout(() => navigation.navigate('MainTabs', { screen: 'Home' }), 300);
   };
 
+  const alertConfig = {
+    aggressive: { icon: 'alarm', color: colors.danger, label: 'Aggressive Wake-Up' },
+    standard: { icon: 'notifications', color: colors.primary, label: 'Standard Alert' },
+    vibration: { icon: 'phone-portrait', color: colors.warning, label: 'Vibration Alert' },
+  };
+
+  const config = alertConfig[alertType] ?? alertConfig.standard;
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.bgGlow} />
+      <View style={[styles.bgGlow, { backgroundColor: config.color }]} />
+
       <View style={styles.content}>
-        <Animated.View style={[styles.iconRing, { transform: [{ scale: pulseAnim }] }]}>
-          <View style={styles.iconInner}>
-            <Text style={styles.iconEmoji}>📍</Text>
+        <Animated.View style={[styles.iconRing, { transform: [{ scale: pulseAnim }], borderColor: config.color + '66' }]}>
+          <View style={[styles.iconInner, { backgroundColor: config.color + '33' }]}>
+            <Ionicons name="location" size={52} color={config.color} />
           </View>
         </Animated.View>
+
         <Text style={styles.headline}>Almost there!</Text>
-        <Text style={styles.locationName}>{locationName}</Text>
+        <Text style={[styles.locationName, { color: config.color }]}>{locationName}</Text>
         <Text style={styles.subtitle}>
           {alertType === 'aggressive'
-            ? 'You are approaching your destination. Tap dismiss when ready.'
+            ? 'You are approaching your destination.\nTap dismiss when ready.'
             : "You're getting close to your stop."}
         </Text>
+
         <View style={styles.typeBadge}>
-          <Text style={styles.typeBadgeText}>
-            {alertType === 'aggressive' ? '🚨 Aggressive Wake-Up' : alertType === 'vibration' ? '📳 Vibration' : '🔔 Standard'}
-          </Text>
+          <Ionicons name={config.icon} size={14} color={config.color} />
+          <Text style={[styles.typeBadgeText, { color: config.color }]}>{config.label}</Text>
         </View>
       </View>
+
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.dismissButton, dismissed && styles.dismissButtonDone]}
+          style={[styles.dismissButton, { backgroundColor: dismissed ? colors.success : config.color }]}
           onPress={handleDismiss}
           activeOpacity={0.85}
         >
+          <Ionicons
+            name={dismissed ? 'checkmark-circle' : 'hand-left'}
+            size={20}
+            color="#fff"
+          />
           <Text style={styles.dismissText}>
-            {dismissed ? '✓ Dismissed' : alertType === 'aggressive' ? "👋 I'm Awake — Dismiss" : 'Dismiss'}
+            {dismissed ? 'Dismissed' : alertType === 'aggressive' ? "I'm Awake — Dismiss" : 'Dismiss'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -81,18 +101,50 @@ export default function AlarmScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  bgGlow: { position: 'absolute', top: -100, left: -100, right: -100, height: 400, backgroundColor: colors.primary, opacity: 0.08, borderRadius: 200 },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
-  iconRing: { width: 140, height: 140, borderRadius: 70, backgroundColor: colors.primaryGlow, borderWidth: 2, borderColor: colors.primary + '66', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
-  iconInner: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.primary + '33', alignItems: 'center', justifyContent: 'center' },
-  iconEmoji: { fontSize: 48 },
+  bgGlow: {
+    position: 'absolute',
+    top: -100, left: -100, right: -100,
+    height: 400, opacity: 0.07, borderRadius: 200,
+  },
+  content: {
+    flex: 1, alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl, gap: spacing.md,
+  },
+  iconRing: {
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: colors.primaryGlow,
+    borderWidth: 2,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  iconInner: {
+    width: 100, height: 100, borderRadius: 50,
+    alignItems: 'center', justifyContent: 'center',
+  },
   headline: { ...typography.h1, textAlign: 'center' },
-  locationName: { fontSize: 26, fontWeight: '700', color: colors.primary, textAlign: 'center' },
-  subtitle: { ...typography.body, textAlign: 'center', lineHeight: 22, paddingHorizontal: spacing.xl },
-  typeBadge: { marginTop: spacing.sm, backgroundColor: colors.bgCard, borderRadius: radius.full, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border },
+  locationName: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
+  subtitle: {
+    ...typography.body, textAlign: 'center',
+    lineHeight: 22, paddingHorizontal: spacing.xl,
+  },
+  typeBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginTop: spacing.sm,
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.full,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
   typeBadgeText: { ...typography.captionBold },
   footer: { padding: spacing.xl, paddingBottom: spacing.xxl },
-  dismissButton: { backgroundColor: colors.primary, borderRadius: radius.full, paddingVertical: spacing.md + 4, paddingHorizontal: spacing.xxl, alignItems: 'center' },
-  dismissButtonDone: { backgroundColor: colors.success },
+  dismissButton: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: spacing.sm,
+    borderRadius: radius.full,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing.xxl,
+  },
   dismissText: { fontSize: 17, fontWeight: '700', color: '#fff' },
 });

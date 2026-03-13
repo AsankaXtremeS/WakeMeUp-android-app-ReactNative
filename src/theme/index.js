@@ -2,9 +2,9 @@ export const colors = {
   bg: '#0A0A0F',
   bgCard: '#13131A',
   bgElevated: '#1C1C26',
-  primary: '#6C63FF',
-  primaryLight: '#8B85FF',
-  primaryDark: '#4B44CC',
+  primary: '#2563EB', // slightly darker blue
+  primaryLight: '#60A5FA', // lighter but still blue
+  primaryDark: '#1E40AF', // much darker blue
   primaryGlow: 'rgba(108, 99, 255, 0.15)',
   success: '#22C55E',
   warning: '#F59E0B',

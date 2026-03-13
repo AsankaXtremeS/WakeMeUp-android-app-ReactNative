@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import useReminderStore, {
   ALERT_TYPES,
   TRIGGER_TYPES,
@@ -7,10 +8,10 @@ import useReminderStore, {
 } from '../store/reminderStore';
 import { colors, typography, spacing, radius, shadows } from '../theme';
 
-const alertEmoji = {
-  [ALERT_TYPES.AGGRESSIVE]: '🚨',
-  [ALERT_TYPES.STANDARD]: '🔔',
-  [ALERT_TYPES.VIBRATION]: '📳',
+const alertConfig = {
+  [ALERT_TYPES.AGGRESSIVE]: { icon: 'alarm', color: colors.danger },
+  [ALERT_TYPES.STANDARD]: { icon: 'notifications', color: colors.primary },
+  [ALERT_TYPES.VIBRATION]: { icon: 'phone-portrait', color: colors.warning },
 };
 
 export default function ReminderCard({ reminder }) {
@@ -18,6 +19,7 @@ export default function ReminderCard({ reminder }) {
   const deleteReminder = useReminderStore((s) => s.deleteReminder);
 
   const isActive = reminder.status === REMINDER_STATUS.ACTIVE;
+  const alert = alertConfig[reminder.alertType] ?? alertConfig[ALERT_TYPES.STANDARD];
   const triggerLabel =
     reminder.triggerType === TRIGGER_TYPES.DISTANCE
       ? `${reminder.distanceKm} km away`
@@ -28,7 +30,9 @@ export default function ReminderCard({ reminder }) {
       <View style={[styles.accent, { backgroundColor: isActive ? colors.primary : colors.textMuted }]} />
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.emoji}>{alertEmoji[reminder.alertType] ?? '🔔'}</Text>
+          <View style={[styles.iconWrap, { backgroundColor: alert.color + '22' }]}>
+            <Ionicons name={alert.icon} size={20} color={alert.color} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.name, !isActive && { color: colors.textMuted }]} numberOfLines={1}>
               {reminder.label || reminder.location?.name}
@@ -41,15 +45,22 @@ export default function ReminderCard({ reminder }) {
             style={[styles.toggle, isActive && styles.toggleActive]}
             onPress={() => toggleReminder(reminder.id)}
           >
-            <Text style={styles.toggleText}>{isActive ? 'ON' : 'OFF'}</Text>
+            <Text style={[styles.toggleText, { color: isActive ? colors.primary : colors.textMuted }]}>
+              {isActive ? 'ON' : 'OFF'}
+            </Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.bottomRow}>
           <View style={styles.pill}>
-            <Text style={styles.pillText}>📍 {triggerLabel}</Text>
+            <Ionicons name="location-outline" size={11} color={colors.textSecondary} />
+            <Text style={styles.pillText}>{triggerLabel}</Text>
           </View>
-          <TouchableOpacity onPress={() => deleteReminder(reminder.id)}>
-            <Text style={{ fontSize: 16 }}>🗑</Text>
+          <TouchableOpacity
+            onPress={() => deleteReminder(reminder.id)}
+            style={styles.deleteButton}
+          >
+            <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -77,7 +88,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  emoji: { fontSize: 22 },
+  iconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   name: { ...typography.bodyBold },
   address: { ...typography.caption, marginTop: 2 },
   toggle: {
@@ -92,17 +109,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGlow,
     borderColor: colors.primary,
   },
-  toggleText: { ...typography.captionBold, color: colors.primary, fontSize: 10 },
+  toggleText: { fontSize: 10, fontWeight: '700' },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: colors.bgElevated,
     borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
   },
   pillText: { ...typography.caption, color: colors.textSecondary },
+  deleteButton: { padding: 4 },
 });
